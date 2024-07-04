@@ -28,21 +28,28 @@ public class PostRepository {
     return Optional.empty();
   }
 
-  public Post save(Post post) {
-    long postId = post.getId();
+  public Post save(Post newPost) {
+    //при Id == 0 добавляем в коллекцию пост с новым несуществующим Id,
+    //при Id != 0 добавляем пост с указанным Id в коллекцию, если же Id уже существует, то меняем контент поста с указанным Id в коллекции
+    long postId = newPost.getId();
     if (postId == 0) {
       while (idCollection.contains(idValue.get())) {
         idValue.getAndIncrement();
       }
-        post.setId(idValue.get());
+        newPost.setId(idValue.get());
     } else {
-      if (idCollection.contains(idValue.get())) {
-        removeById(postId);
+      if (idCollection.contains(postId)) {
+        for (Post postInCollection : postCollection) {
+          if (postInCollection.getId() == postId) {
+            postInCollection.setContent(newPost.getContent());
+            return newPost;
+          }
+        }
       }
     }
-      postCollection.add(post);
+      postCollection.add(newPost);
       idCollection.add(postId);
-      return post;
+      return newPost;
   }
 
   public void removeById(long id) {
