@@ -2,25 +2,22 @@ package ru.raccoon.repository;
 
 import ru.raccoon.model.Post;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 // Stub
 public class PostRepository {
 
-  final ConcurrentLinkedQueue<Post> postCollection = new ConcurrentLinkedQueue<>();
-  final ConcurrentLinkedQueue<Long> idCollection = new ConcurrentLinkedQueue<>();
-  static AtomicLong idValue = new AtomicLong(0);
+  private static final ConcurrentHashMap<Long, Post> postCollection = new ConcurrentHashMap<>();
+  private static final AtomicLong idValue = new AtomicLong(0);
 
   public List<Post> all() {
-      return new ArrayList<>(postCollection);
+    return new ArrayList<>(postCollection.values());
   }
 
   public Optional<Post> getById(long id) {
-    for (Post post : postCollection) {
+    for (Post post : postCollection.values()) {
       if (post.getId() == id) {
         return Optional.of(post);
       }
@@ -31,15 +28,16 @@ public class PostRepository {
   public Post save(Post newPost) {
     //при Id == 0 добавляем в коллекцию пост с новым несуществующим Id,
     //при Id != 0 добавляем пост с указанным Id в коллекцию, если же Id уже существует, то меняем контент поста с указанным Id в коллекции
+    List<Long> ids = Collections.list(postCollection.keys());
     long postId = newPost.getId();
     if (postId == 0) {
-      while (idCollection.contains(idValue.get())) {
+      while (ids.contains(idValue.get())) {
         idValue.getAndIncrement();
       }
         newPost.setId(idValue.get());
     } else {
-      if (idCollection.contains(postId)) {
-        for (Post postInCollection : postCollection) {
+      if (ids.contains(postId)) {
+        for (Post postInCollection : postCollection.values()) {
           if (postInCollection.getId() == postId) {
             postInCollection.setContent(newPost.getContent());
             return newPost;
@@ -47,17 +45,15 @@ public class PostRepository {
         }
       }
     }
-      postCollection.add(newPost);
-      idCollection.add(postId);
+      postCollection.put(newPost.getId(), newPost);
       return newPost;
   }
 
   public void removeById(long id) {
-    for (Post post : postCollection) {
+    for (Post post : postCollection.values()) {
     long postId = post.getId();
         if (postId == id) {
-          postCollection.remove(post);
-          idCollection.remove(postId);
+          postCollection.remove(post.getId());
         }
     }
   }

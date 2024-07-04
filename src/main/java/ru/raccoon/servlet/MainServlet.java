@@ -10,7 +10,8 @@ import javax.servlet.http.HttpServletResponse;
 
 public class MainServlet extends HttpServlet {
   private PostController controller;
-  final String CONST_PATH_PART = "/api/posts";
+  private static final String CONST_PATH_PART = "/api/posts";
+  private static final String CONST_PATH_ID = "/\\d+";
 
   @Override
   public void init() {
@@ -31,7 +32,7 @@ public class MainServlet extends HttpServlet {
         controller.all(resp);
         return;
       }
-      if (method.equals("GET") && path.matches(CONST_PATH_PART + "/\\d+")) {
+      if (method.equals("GET") && path.matches(CONST_PATH_PART + CONST_PATH_ID)) {
         // easy way
         final var id = getIdFromPath(path);
         controller.getById(id, resp);
@@ -41,7 +42,7 @@ public class MainServlet extends HttpServlet {
         controller.save(req.getReader(), resp);
         return;
       }
-      if (method.equals("DELETE") && path.matches(CONST_PATH_PART + "/\\d+")) {
+      if (method.equals("DELETE") && path.matches(CONST_PATH_PART + CONST_PATH_ID)) {
         // easy way
         final var id = getIdFromPath(path);
         controller.removeById(id, resp);
