@@ -10,12 +10,14 @@ import javax.servlet.http.HttpServletResponse;
 
 public class MainServlet extends HttpServlet {
   private PostController controller;
+  final String CONST_PATH_PART = "/api/posts";
 
   @Override
   public void init() {
     final var repository = new PostRepository();
     final var service = new PostService(repository);
     controller = new PostController(service);
+
   }
 
   @Override
@@ -25,23 +27,23 @@ public class MainServlet extends HttpServlet {
       final var path = req.getRequestURI();
       final var method = req.getMethod();
       // primitive routing
-      if (method.equals("GET") && path.equals("/api/posts")) {
+      if (method.equals("GET") && path.equals(CONST_PATH_PART)) {
         controller.all(resp);
         return;
       }
-      if (method.equals("GET") && path.matches("/api/posts/\\d+")) {
+      if (method.equals("GET") && path.matches(CONST_PATH_PART + "/\\d+")) {
         // easy way
-        final var id = Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
+        final var id = getIdFromPath(path);
         controller.getById(id, resp);
         return;
       }
-      if (method.equals("POST") && path.equals("/api/posts")) {
+      if (method.equals("POST") && path.equals(CONST_PATH_PART)) {
         controller.save(req.getReader(), resp);
         return;
       }
-      if (method.equals("DELETE") && path.matches("/api/posts/\\d+")) {
+      if (method.equals("DELETE") && path.matches(CONST_PATH_PART + "/\\d+")) {
         // easy way
-        final var id = Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
+        final var id = getIdFromPath(path);
         controller.removeById(id, resp);
         return;
       }
@@ -50,6 +52,10 @@ public class MainServlet extends HttpServlet {
       e.printStackTrace();
       resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
+  }
+
+  long getIdFromPath(String path) {
+    return Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
   }
 }
 
