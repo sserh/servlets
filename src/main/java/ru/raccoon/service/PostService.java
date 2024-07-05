@@ -1,11 +1,13 @@
 package ru.raccoon.service;
 
+import org.springframework.stereotype.Service;
 import ru.raccoon.exception.NotFoundException;
 import ru.raccoon.model.Post;
 import ru.raccoon.repository.PostRepository;
 
 import java.util.List;
 
+@Service
 public class PostService {
   private final PostRepository repository;
 
