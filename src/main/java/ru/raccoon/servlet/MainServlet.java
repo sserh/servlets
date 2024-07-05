@@ -1,5 +1,7 @@
 package ru.raccoon.servlet;
 
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import ru.raccoon.JavaConfig;
 import ru.raccoon.controller.PostController;
 import ru.raccoon.repository.PostRepository;
 import ru.raccoon.service.PostService;
@@ -15,9 +17,8 @@ public class MainServlet extends HttpServlet {
 
   @Override
   public void init() {
-    final var repository = new PostRepository();
-    final var service = new PostService(repository);
-    controller = new PostController(service);
+    final var context = new AnnotationConfigApplicationContext(JavaConfig.class);
+    controller = context.getBean(PostController.class);
 
   }
 
