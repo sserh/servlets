@@ -1,11 +1,13 @@
 package ru.raccoon.repository;
 
+import org.springframework.stereotype.Repository;
 import ru.raccoon.model.Post;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+@Repository
 // Stub
 public class PostRepository {
 
