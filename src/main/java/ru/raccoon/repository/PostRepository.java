@@ -1,5 +1,7 @@
 package ru.raccoon.repository;
 
+import ru.raccoon.exception.NotFoundException;
+import ru.raccoon.model.InternalPost;
 import ru.raccoon.model.Post;
 
 import java.util.*;
@@ -10,52 +12,68 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PostRepository {
 
-  private static final ConcurrentHashMap<Long, Post> postCollection = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<Long, InternalPost> postCollection = new ConcurrentHashMap<>();
   private static final AtomicLong idValue = new AtomicLong(0);
 
   public List<Post> all() {
-    return new ArrayList<>(postCollection.values());
+    ArrayList<Post> posts = new ArrayList<>();
+    for (InternalPost internalPost : postCollection.values()) {
+      if (!internalPost.isRemoved()) {
+        posts.add(internalPost.convertToPost());
+      }
+    }
+    return posts;
   }
 
   public Optional<Post> getById(long id) {
-    for (Post post : postCollection.values()) {
-      if (post.getId() == id) {
-        return Optional.of(post);
+    for (InternalPost internalPost : postCollection.values()) {
+      if ((internalPost.getId() == id) && (!internalPost.isRemoved())) {
+        return Optional.of(internalPost.convertToPost());
       }
     }
-    return Optional.empty();
+    throw new NotFoundException("Post with id " + id + " is not found");
   }
 
   public Post save(Post newPost) {
+
+    InternalPost internalPost = new InternalPost();
+    internalPost = internalPost.convertToInternalPost(newPost);
+
     //при Id == 0 добавляем в коллекцию пост с новым несуществующим Id,
-    //при Id != 0 добавляем пост с указанным Id в коллекцию, если же Id уже существует, то меняем контент поста с указанным Id в коллекции
+    //при Id != 0 меняем контент поста, если пост существует и не помечен удалённым
     List<Long> ids = Collections.list(postCollection.keys());
-    long postId = newPost.getId();
+    long postId = internalPost.getId();
     if (postId == 0) {
       while (ids.contains(idValue.get())) {
         idValue.getAndIncrement();
       }
-        newPost.setId(idValue.get());
+        internalPost.setId(idValue.get());
     } else {
-      if (ids.contains(postId)) {
-        for (Post postInCollection : postCollection.values()) {
-          if (postInCollection.getId() == postId) {
-            postInCollection.setContent(newPost.getContent());
-            return newPost;
+      if ((ids.contains(postId))) {
+        if (!postCollection.get(internalPost.getId()).isRemoved()) {
+          for (InternalPost postInCollection : postCollection.values()) {
+            if (postInCollection.getId() == postId) {
+              postInCollection.setContent(newPost.getContent());
+              return internalPost.convertToPost();
+            }
           }
+        } else {
+          throw new NotFoundException("Post with id " + postId + " is not found");
         }
       }
     }
-      postCollection.put(newPost.getId(), newPost);
-      return newPost;
+      postCollection.put(internalPost.getId(), internalPost);
+      return internalPost.convertToPost();
   }
 
   public void removeById(long id) {
-    for (Post post : postCollection.values()) {
+    for (InternalPost post : postCollection.values()) {
     long postId = post.getId();
-        if (postId == id) {
-          postCollection.remove(post.getId());
-        }
+      if ((postId == id) && (!post.isRemoved())) {
+        post.setRemoved(true);
+        return;
+      }
     }
+    throw new NotFoundException("Post with id " + id + " is not found");
   }
 }
