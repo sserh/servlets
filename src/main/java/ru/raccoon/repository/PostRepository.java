@@ -5,8 +5,9 @@ import ru.raccoon.model.Post;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.stereotype.Repository;
 
-// Stub
+@Repository
 public class PostRepository {
 
   private static final ConcurrentHashMap<Long, Post> postCollection = new ConcurrentHashMap<>();
